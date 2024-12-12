@@ -180,13 +180,21 @@ export default function Home() {
       {/* Input Area - Now Sticky */}
       <div className="sticky bottom-0 bg-gray-800 p-6 border-t border-gray-700 z-50">
         <div className="max-w-4xl mx-auto flex items-center space-x-4">
-          <input 
-            type="text" 
+          <textarea 
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Ask me anything..."
-            className="flex-grow p-4 bg-gray-700 text-gray-100 border border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-gray-500"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.shiftKey) {
+                e.preventDefault()
+                setInput(prev => prev + '\n')
+              }
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage()
+              }
+            }}
+            placeholder="Ask me anything... (Shift+Enter for new line, Enter to send)"
+            className="flex-grow p-4 bg-gray-700 text-gray-100 border border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-gray-500 resize-none h-24"
             disabled={isLoading}
           />
           <button 
