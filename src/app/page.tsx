@@ -3,7 +3,19 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Anthropic from '@anthropic-ai/sdk'
-import { PaperAirplaneIcon, SparklesIcon, UserCircleIcon } from '@heroicons/react/24/solid'
+import { 
+  SparklesIcon, 
+  DocumentTextIcon, 
+  CodeBracketIcon, 
+  LightBulbIcon 
+} from '@heroicons/react/24/solid'
+
+type MessageStep = {
+  id: string;
+  title: string;
+  content: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
 export default function Home() {
   const [messages, setMessages] = useState([
@@ -15,6 +27,7 @@ export default function Home() {
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [currentAnswer, setCurrentAnswer] = useState<MessageStep[]>([])
   const messagesEndRef = useRef<null | HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -24,6 +37,21 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  const parseResponseIntoSteps = (text: string): MessageStep[] => {
+    // Basic parsing of response into steps
+    const steps = text.split('\n\n').map((step, index) => ({
+      id: `step-${index}`,
+      title: `Step ${index + 1}`,
+      content: step.trim(),
+      icon: index === 0 
+        ? DocumentTextIcon 
+        : index === 1 
+          ? CodeBracketIcon 
+          : LightBulbIcon
+    }))
+    return steps
+  }
 
   const handleSendMessage = async () => {
     if (input.trim() === '') return
@@ -65,6 +93,10 @@ export default function Home() {
         sender: 'ai'
       }
 
+      // Parse response into steps
+      const answerSteps = parseResponseIntoSteps(aiResponseText)
+      setCurrentAnswer(answerSteps)
+
       setMessages(prev => [...prev, aiResponse])
     } catch (error) {
       console.error('Error sending message:', error)
@@ -80,83 +112,89 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
       {/* Header */}
-      <header className="bg-white shadow-md p-4 flex items-center justify-between">
+      <header className="bg-gray-800 shadow-md p-4 flex items-center justify-between border-b border-gray-700">
         <div className="flex items-center space-x-2">
-          <SparklesIcon className="h-8 w-8 text-purple-600" />
-          <h1 className="text-2xl font-bold text-gray-800">Claude AI</h1>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button className="text-gray-600 hover:text-gray-800">
-            New Chat
-          </button>
-          <UserCircleIcon className="h-10 w-10 text-gray-500" />
+          <SparklesIcon className="h-8 w-8 text-cyan-400 animate-pulse" />
+          <h1 className="text-2xl font-bold text-cyan-300">Claude AI</h1>
         </div>
       </header>
 
-      {/* Chat Messages Container */}
-      <div className="flex-grow overflow-y-auto p-6 space-y-4">
-        {messages.map((msg) => (
-          <div 
-            key={msg.id} 
-            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+      {/* Chat and Answer Container */}
+      <div className="flex flex-grow">
+        {/* Chat Messages */}
+        <div className="w-1/2 bg-gray-800 border-r border-gray-700 overflow-y-auto p-6 space-y-4">
+          {messages.map((msg) => (
             <div 
-              className={`max-w-[70%] p-4 rounded-2xl shadow-md ${
-                msg.sender === 'ai' 
-                  ? 'bg-white text-gray-800 rounded-bl-none' 
-                  : 'bg-purple-600 text-white rounded-br-none'
-              }`}
+              key={msg.id} 
+              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {msg.text}
-            </div>
-          </div>
-        ))}
-        
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white p-4 rounded-2xl shadow-md">
-              <div className="animate-pulse flex space-x-2">
-                <div className="h-3 w-3 bg-gray-300 rounded-full"></div>
-                <div className="h-3 w-3 bg-gray-300 rounded-full"></div>
-                <div className="h-3 w-3 bg-gray-300 rounded-full"></div>
+              <div 
+                className={`max-w-[70%] p-4 rounded-2xl shadow-lg ${
+                  msg.sender === 'ai' 
+                    ? 'bg-gray-700 text-gray-100 rounded-bl-none' 
+                    : 'bg-cyan-600 text-white rounded-br-none'
+                }`}
+              >
+                {msg.text}
               </div>
             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-gray-700 p-4 rounded-2xl animate-pulse">
+                <div className="flex space-x-2">
+                  <div className="h-3 w-3 bg-cyan-500 rounded-full animate-bounce"></div>
+                  <div className="h-3 w-3 bg-cyan-500 rounded-full animate-bounce delay-100"></div>
+                  <div className="h-3 w-3 bg-cyan-500 rounded-full animate-bounce delay-200"></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Detailed Answer Steps */}
+        <div className="w-1/2 bg-gray-900 p-6 overflow-y-auto">
+          {currentAnswer.length > 0 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-cyan-300 mb-4">Detailed Answer</h2>
+              {currentAnswer.map((step) => (
+                <div 
+                  key={step.id} 
+                  className="bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:border-cyan-500 border border-transparent transition-all duration-300 ease-in-out"
+                >
+                  <div className="flex items-center mb-4">
+                    <step.icon className="h-8 w-8 text-cyan-400 mr-4 animate-pulse" />
+                    <h3 className="text-xl font-semibold text-cyan-300">{step.title}</h3>
+                  </div>
+                  <p className="text-gray-300">{step.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Input Area */}
-      <div className="bg-white p-6 border-t">
+      <div className="bg-gray-800 p-6 border-t border-gray-700">
         <div className="max-w-4xl mx-auto flex items-center space-x-4">
-          <div className="flex-grow relative">
-            <input 
-              type="text" 
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Message Claude..."
-              className="w-full p-4 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-              disabled={isLoading}
-            />
-            {input.trim() === '' && (
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                <SparklesIcon className="h-6 w-6 text-gray-400" />
-              </div>
-            )}
-          </div>
+          <input 
+            type="text" 
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            placeholder="Ask me anything..."
+            className="flex-grow p-4 bg-gray-700 text-gray-100 border border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-gray-500"
+            disabled={isLoading}
+          />
           <button 
             onClick={handleSendMessage}
-            className={`p-3 rounded-full transition-colors ${
-              isLoading || input.trim() === '' 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-purple-600 text-white hover:bg-purple-700'
-            }`}
             disabled={isLoading || input.trim() === ''}
+            className="bg-cyan-600 text-white p-4 rounded-full hover:bg-cyan-500 disabled:opacity-50 transition-colors duration-300 ease-in-out"
           >
-            <PaperAirplaneIcon className="h-6 w-6" />
+            Send
           </button>
         </div>
       </div>
