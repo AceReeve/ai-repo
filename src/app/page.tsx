@@ -122,9 +122,9 @@ export default function Home() {
       </header>
 
       {/* Chat and Answer Container */}
-      <div className="flex flex-grow">
+      <div className="flex flex-grow overflow-hidden">
         {/* Chat Messages */}
-        <div className="w-1/2 bg-gray-800 border-r border-gray-700 overflow-y-auto p-6 space-y-4">
+        <div className="w-1/2 bg-gray-800 border-r border-gray-700 overflow-y-auto p-6 space-y-4 pb-24">
           {messages.map((msg) => (
             <div 
               key={msg.id} 
@@ -156,7 +156,7 @@ export default function Home() {
         </div>
 
         {/* Detailed Answer Steps */}
-        <div className="w-1/2 bg-gray-900 p-6 overflow-y-auto">
+        <div className="w-1/2 bg-gray-900 p-6 overflow-y-auto pb-24">
           {currentAnswer.length > 0 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-cyan-300 mb-4">Detailed Answer</h2>
@@ -177,8 +177,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="bg-gray-800 p-6 border-t border-gray-700">
+      {/* Input Area - Now Sticky */}
+      <div className="sticky bottom-0 bg-gray-800 p-6 border-t border-gray-700 z-50">
         <div className="max-w-4xl mx-auto flex items-center space-x-4">
           <input 
             type="text" 
